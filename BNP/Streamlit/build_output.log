@@ -1,0 +1,28 @@
+2026-02-12 19:42:11,169  INFO      Tables in DB: ['sr', 'history_sr', 'history_communication', 'srcontact', 'activity', 'history_activity', 'businessline', 'businesslineactivity', 'businesslineprocess', 'category', 'deskbusinesslinelink', 'jur_user', 'label', 'sqlite_stat1']
+2026-02-12 19:42:11,169  INFO      Using table: sr
+2026-02-12 19:42:11,171  INFO      Available columns: ['ID', 'SRNUMBER', 'CATEGORY_ID', 'SUBCATEGORY_ID', 'JUR_ASSIGNEE_ID', 'STATUS_ID', 'EXPECTED_FIRST_RESPONSE_DATE', 'EXPECTED_ACKNOWLEDGEMENT_DATE', 'EXPIRATION_DATE', 'CLOSINGDATE', 'JUR_DESK_ID', 'CREATIONDATE', 'PRIORITY_ID', 'ROOTSR_ID', 'TYPE_ID', 'QUICK_FULFILLMENT_ID', 'QUICK_ANSWER', 'DEMAND_DATE', 'ACKNOWLEDGE_DATE', 'INTERNAL_FLAG', 'REOPEN_DATE', 'ALERT', 'ISSCHEDULER', 'UPDATE_DATE', 'NEXTACTNUMBER', 'CREATOR_ID', 'JUR_ASSIGNEDGROUP_ID', 'ESTIMATEDTIME', 'PRODUCERUSER_ID', 'PRODUCERDATE', 'CHECKERUSER_ID', 'CHECKERDATE', 'CALCDUEDATE', 'HAS_NEW', 'WORKFLOW_ID', 'ISSUER', 'EFFECTIVE_FIRST_RESPONSE_DATE', 'CONFIRMATION_TO_BE_SENT', 'FINAL_RESPONSE_DATE', 'REMINDER_DATE', 'INITIAL_TASK_ID', 'SUSPEND_DURATION', 'TREATMENT_TIME', 'AUTO_SUGGEST', 'SR_DRAFT_TYPE', 'LEAD_TIME_EX1', 'LEAD_TIME_EX3', 'LEAD_TIME_EX2', 'LEAD_TIME_EX4', 'LEAD_TIME_EX5', 'IS_MULTICHANNEL_SR', 'FIRST_ACTION_EMAIL_DATE', 'REPLY_TIME', 'ISSUER_TYPE_VALUE']
+2026-02-12 19:42:11,171  WARNING   Column 'sla_met' not found (tried ['sla_met', 'SLA_Met', 'sla_compliant', 'within_sla'])
+2026-02-12 19:42:11,171  INFO      Column mapping: {'sr_id': 'ID', 'category': 'CATEGORY_ID', 'desk': 'JUR_DESK_ID', 'status': 'STATUS_ID', 'created_at': 'CREATIONDATE', 'closed_at': 'CLOSINGDATE', 'first_response_at': 'EFFECTIVE_FIRST_RESPONSE_DATE', 'sla_met': None}
+2026-02-12 19:42:11,171  INFO      Executing query (dates 2024-01 → 2025-09)…
+2026-02-12 19:42:48,231  INFO      Loaded 4,145,682 rows
+Traceback (most recent call last):
+  File "/Users/jo/Desktop/BNP Paribas/BNP/Streamlit/scripts/build_extracts.py", line 282, in <module>
+    main()
+  File "/Users/jo/Desktop/BNP Paribas/BNP/Streamlit/scripts/build_extracts.py", line 260, in main
+    df = _enrich(raw)
+         ^^^^^^^^^^^^
+  File "/Users/jo/Desktop/BNP Paribas/BNP/Streamlit/scripts/build_extracts.py", line 137, in _enrich
+    df["is_closed"] = df["status"].str.lower().isin(["closed", "resolved", "done", "complete"])
+                      ^^^^^^^^^^^^^^^^
+  File "/Users/jo/anaconda3/lib/python3.11/site-packages/pandas/core/generic.py", line 6299, in __getattr__
+    return object.__getattribute__(self, name)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/jo/anaconda3/lib/python3.11/site-packages/pandas/core/accessor.py", line 224, in __get__
+    accessor_obj = self._accessor(obj)
+                   ^^^^^^^^^^^^^^^^^^^
+  File "/Users/jo/anaconda3/lib/python3.11/site-packages/pandas/core/strings/accessor.py", line 191, in __init__
+    self._inferred_dtype = self._validate(data)
+                           ^^^^^^^^^^^^^^^^^^^^
+  File "/Users/jo/anaconda3/lib/python3.11/site-packages/pandas/core/strings/accessor.py", line 245, in _validate
+    raise AttributeError("Can only use .str accessor with string values!")
+AttributeError: Can only use .str accessor with string values!. Did you mean: 'std'?
