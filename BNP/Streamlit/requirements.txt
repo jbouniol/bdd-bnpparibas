@@ -1,5 +1,5 @@
-streamlit==1.24.0
-plotly
-pandas
-pyarrow
-numpy
+streamlit>=1.32
+plotly>=5.18
+pandas>=2.0,<2.2
+pyarrow>=13,<15
+numpy>=1.26
