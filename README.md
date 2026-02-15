@@ -15,26 +15,25 @@ Analytics platform built for the BNP Paribas consulting case, with two complemen
 
 This repository combines:
 
-- `BNP/Streamlit/`: dashboard application (Parquet-based reads)
+- `BNP/Streamlit/`: dashboard application (direct SQLite queries)
 - `Docs/`: methodology and analytical guides
 - `Notebook/`: deep-dive analyses, EDA, and SQL/Pandas exploration
-- `Data/`: working datasets (excluding the 16 GB raw database from versioning)
+- `Data/`: source datasets, including `Data/Processed/hobart_database.db`
 
 ## Target Architecture
 
 ```text
 HOBART SQLite (local)
         |
-        | BNP/Streamlit/scripts/build_extracts.py
-        v
-Parquet extracts (BNP/Streamlit/data)
-        |
-        | BNP/Streamlit/src/data_loader.py (cache + schema validation)
+        | BNP/Streamlit/src/data_loader.py
+        |  - SQL queries
+        |  - temporary SQL views
+        |  - Streamlit cache
         v
 Streamlit app (BNP/Streamlit/app.py + BNP/Streamlit/pages/*)
 ```
 
-The dashboard does not connect directly to SQLite in production. It reads versioned Parquet extracts only.
+The dashboard reads directly from `hobart_database.db`.
 
 ## Streamlit Application Structure
 
@@ -53,54 +52,24 @@ BNP/Streamlit/
 |  |- metrics.py
 |  |- charts.py
 |  `- ui.py
-|- scripts/
-|  `- build_extracts.py
-|- data/
-|  |- extract_global_stats.parquet
-|  |- extract_category_kpis.parquet
-|  |- extract_monthly_category_trends.parquet
-|  |- extract_monthly_desk_metrics.parquet
-|  |- extract_treatment_time.parquet
-|  `- extract_sr_sample.parquet
 `- requirements.txt
 ```
 
-## Extraction Process (SQLite -> Parquet)
+## Database Access
 
-`BNP/Streamlit/scripts/build_extracts.py` runs a single pipeline:
+By default the app reads:
 
-1. SQL load from HOBART (`sr` + `category`) with optional date bounds.
-2. Business enrichment (`month`, `hours_to_close`, `first_response_hours`, `is_closed`, `sla_met`, `status`).
-3. Build aggregated datasets by analytical use case.
-4. Write Parquet extracts to `BNP/Streamlit/data/`.
+- `Data/Processed/hobart_database.db`
 
-### Extract Catalog
+You can override the path with:
 
-| Extract | Grain | Primary Use |
-|---|---|---|
-| `extract_global_stats.parquet` | Monthly global | Executive KPIs, volume, closure, SLA |
-| `extract_category_kpis.parquet` | Category | Pareto and category comparison |
-| `extract_monthly_category_trends.parquet` | Month x Category | Category evolution |
-| `extract_monthly_desk_metrics.parquet` | Month x Desk | Desk benchmark |
-| `extract_treatment_time.parquet` | Category (closed SR) | Processing-time analysis |
-| `extract_sr_sample.parquet` | SR-level sample | Ad hoc analysis / notebooks |
+```bash
+export HOBART_DB_PATH=/path/to/hobart_database.db
+```
 
 ## Local Runbook
 
-### 1) Regenerate extracts
-
-```bash
-cd BNP/Streamlit
-
-export HOBART_DB_PATH=/path/to/hobart_database.db
-# Optional
-# export START_DATE=2025-01
-# export END_DATE=2025-12
-
-python scripts/build_extracts.py
-```
-
-### 2) Run the dashboard
+### 1) Run the dashboard
 
 ```bash
 cd BNP/Streamlit
@@ -110,7 +79,7 @@ pip install -r requirements.txt
 streamlit run app.py
 ```
 
-### 3) Use advanced analysis assets
+### 2) Use advanced analysis assets
 
 - Methodology guides: `Docs/`
 - Exploratory and deep-dive analyses: `Notebook/`
@@ -118,16 +87,15 @@ streamlit run app.py
 
 ## Change Rules
 
-Any new metric must be aligned across three layers:
+Any new metric should be aligned across three layers:
 
-1. Computation in `BNP/Streamlit/scripts/build_extracts.py`
+1. SQL logic in `BNP/Streamlit/src/data_loader.py` (queries/views)
 2. Schema definition in `BNP/Streamlit/src/config.py`
 3. Exposure in dashboard/notebooks (`BNP/Streamlit/src/*`, `BNP/Streamlit/pages/*`)
 
 ## Go-Live Checklist
 
-- [ ] Offline extraction completes without errors
-- [ ] Parquet extracts are updated in `BNP/Streamlit/data/`
+- [ ] `HOBART_DB_PATH` points to a valid SQLite file
 - [ ] Dashboard runs locally (`streamlit run app.py`)
 - [ ] Analysis pages load correctly
 - [ ] CSV exports are valid

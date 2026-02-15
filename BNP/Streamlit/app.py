@@ -34,7 +34,7 @@ render_sidebar_filters()
 st.markdown("# Service Request Analytics")
 st.markdown(
     "This dashboard monitors request volume, service performance, and category/desk dynamics "
-    "from pre-aggregated Parquet extracts."
+    "from direct HOBART database queries."
 )
 
 st.markdown("### Start Here")
@@ -78,8 +78,8 @@ st.markdown(
 
 st.markdown("### Data Pipeline")
 st.caption(
-    "Source data is extracted offline from the HOBART SQLite database, transformed into "
-    "Parquet datasets, and loaded in read-only mode by this Streamlit app."
+    "The app reads directly from the HOBART SQLite database. "
+    "SQL views and cached loaders are used to keep page rendering responsive."
 )
 st.divider()
 st.caption("Dashboard v1.1 - Data period and business scope are controlled from sidebar filters.")

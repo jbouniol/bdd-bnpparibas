@@ -66,19 +66,28 @@ st.divider()
 # =====================================================================
 # 2) Monthly evolution of top 5 categories
 # =====================================================================
-st.markdown("### Monthly Evolution – Top 5 Categories")
-st.caption(
-    "How the 5 highest-volume categories evolve month over month. "
-    "Spot seasonal patterns or growing demand."
-)
+st.markdown("### Monthly Evolution – Category Group")
+st.caption("Compare monthly evolution for top-volume categories or flop-volume categories.")
 
 if trends_df.empty or category_kpis.empty:
     show_empty_state("Trend or category data not available.")
 else:
-    slider_col, _ = st.columns([1.7, 2.3], gap="large")
+    selector_col, slider_col, _ = st.columns([1.2, 1.2, 1.6], gap="large")
+    with selector_col:
+        category_group = st.radio(
+            "Category group",
+            options=["Top", "Flop"],
+            horizontal=True,
+            key="analysis_category_group",
+        )
     with slider_col:
-        top_n = st.slider("Number of top categories", 3, 10, 5, key="top_n_slider")
+        top_n = st.slider("Number of categories", 3, 10, 5, key="top_n_slider")
     st.plotly_chart(
-        line_top_categories_monthly(trends_df, category_kpis, top_n=top_n),
+        line_top_categories_monthly(
+            trends_df,
+            category_kpis,
+            top_n=top_n,
+            mode="top" if category_group == "Top" else "bottom",
+        ),
         use_container_width=True,
     )

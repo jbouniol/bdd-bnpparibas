@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import streamlit as st
 
-from src.charts import bar_top_categories, line_monthly_sr, scatter_volume_vs_hours
+from src.charts import bar_category_volume, line_monthly_sr, scatter_volume_vs_hours
 from src.config import PAGE_ICON, PAGE_TITLE
 from src.data_loader import load_category_kpis, load_global_stats
 from src.filters import apply_date_filter, render_sidebar_filters
@@ -41,7 +41,18 @@ with col_left:
 
 with col_right:
     if not category_kpis.empty:
-        st.plotly_chart(bar_top_categories(category_kpis), use_container_width=True)
+        top_n = st.slider("Category count", 5, 20, 12, key="overview_top_n")
+        tab_top, tab_flop = st.tabs(["Top Categories", "Flop Categories"])
+        with tab_top:
+            st.plotly_chart(
+                bar_category_volume(category_kpis, top_n=top_n, mode="top"),
+                use_container_width=True,
+            )
+        with tab_flop:
+            st.plotly_chart(
+                bar_category_volume(category_kpis, top_n=top_n, mode="bottom"),
+                use_container_width=True,
+            )
     else:
         show_empty_state("No category data available.")
 

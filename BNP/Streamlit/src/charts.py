@@ -49,21 +49,28 @@ def line_monthly_sr(df: pd.DataFrame) -> go.Figure:
     return _apply_defaults(fig, title="Monthly SR Volume")
 
 
-# ── 2) Bar chart: top categories by volume ──────────────────────────────────
+# ── 2) Bar chart: categories by volume ──────────────────────────────────────
 
-def bar_top_categories(df: pd.DataFrame, top_n: int = 15) -> go.Figure:
-    """Horizontal bar of top N categories — colour = closure rate."""
-    top = df.nlargest(top_n, "total_sr").sort_values("total_sr", ascending=True)
-    has_closure = "closure_rate" in top.columns
+def _select_category_slice(df: pd.DataFrame, top_n: int, mode: str) -> pd.DataFrame:
+    if mode == "bottom":
+        return df.nsmallest(top_n, "total_sr").sort_values("total_sr", ascending=True)
+    return df.nlargest(top_n, "total_sr").sort_values("total_sr", ascending=True)
+
+
+def bar_category_volume(df: pd.DataFrame, top_n: int = 15, mode: str = "top") -> go.Figure:
+    """Horizontal bar of top or bottom N categories by volume."""
+    subset = _select_category_slice(df, top_n, mode)
+    has_closure = "closure_rate" in subset.columns
+    title_prefix = "Top" if mode == "top" else "Flop"
     fig = go.Figure(
         go.Bar(
-            y=top["category"],
-            x=top["total_sr"],
+            y=subset["category"],
+            x=subset["total_sr"],
             orientation="h",
-            text=top["total_sr"].apply(lambda v: f"{v:,}"),
+            text=subset["total_sr"].apply(lambda v: f"{v:,}"),
             textposition="outside",
             marker=dict(
-                color=top["closure_rate"] if has_closure else COLOR_PRIMARY,
+                color=subset["closure_rate"] if has_closure else COLOR_PRIMARY,
                 colorscale="RdYlGn" if has_closure else None,
                 showscale=has_closure,
                 colorbar=dict(title="Closure %") if has_closure else None,
@@ -73,10 +80,15 @@ def bar_top_categories(df: pd.DataFrame, top_n: int = 15) -> go.Figure:
     )
     return _apply_defaults(
         fig,
-        title=f"Top {top_n} Categories by Volume",
+        title=f"{title_prefix} {top_n} Categories by Volume",
         xaxis_title="Number of Requests",
         height=max(400, top_n * 32),
     )
+
+
+def bar_top_categories(df: pd.DataFrame, top_n: int = 15) -> go.Figure:
+    """Backward-compatible wrapper for top category volume bar chart."""
+    return bar_category_volume(df, top_n=top_n, mode="top")
 
 
 # ── 3) Scatter: volume vs avg hours (color = SLA) ───────────────────────────
@@ -195,10 +207,16 @@ def line_top_categories_monthly(
     trends_df: pd.DataFrame,
     category_kpis_df: pd.DataFrame,
     top_n: int = 5,
+    mode: str = "top",
 ) -> go.Figure:
-    """Multi-line chart: monthly evolution of the top N categories by total volume."""
-    top_cats = category_kpis_df.nlargest(top_n, "total_sr")["category"].tolist()
-    subset = trends_df[trends_df["category"].isin(top_cats)].sort_values("month")
+    """Multi-line chart: monthly evolution of top or bottom N categories by total volume."""
+    if mode == "bottom":
+        selected_cats = category_kpis_df.nsmallest(top_n, "total_sr")["category"].tolist()
+        title_prefix = "Flop"
+    else:
+        selected_cats = category_kpis_df.nlargest(top_n, "total_sr")["category"].tolist()
+        title_prefix = "Top"
+    subset = trends_df[trends_df["category"].isin(selected_cats)].sort_values("month")
 
     fig = px.line(
         subset,
@@ -210,7 +228,7 @@ def line_top_categories_monthly(
         color_discrete_sequence=PALETTE_CATEGORICAL[:top_n],
     )
     fig.update_traces(line_width=2.5, marker_size=6)
-    return _apply_defaults(fig, title=f"Monthly Evolution – Top {top_n} Categories", height=500)
+    return _apply_defaults(fig, title=f"Monthly Evolution – {title_prefix} {top_n} Categories", height=500)
 
 
 # ── 7) Treatment time bar (horizontal, colour = days) ───────────────────────

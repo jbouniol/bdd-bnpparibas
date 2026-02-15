@@ -1,11 +1,18 @@
 """Central configuration for the BNP SR Analytics dashboard."""
 
+import os
 from pathlib import Path
 from typing import Final
 
 # ── Paths ────────────────────────────────────────────────────────────────────
 ROOT_DIR: Final[Path] = Path(__file__).resolve().parent.parent
 DATA_DIR: Final[Path] = ROOT_DIR / "data"
+DEFAULT_HOBART_DB_PATH: Final[Path] = (
+    ROOT_DIR.parent.parent / "Data" / "Processed" / "hobart_database.db"
+)
+HOBART_DB_PATH: Final[Path] = Path(
+    os.environ.get("HOBART_DB_PATH", str(DEFAULT_HOBART_DB_PATH))
+)
 
 # ── Extract file names ───────────────────────────────────────────────────────
 EXTRACT_GLOBAL_STATS: Final[str] = "extract_global_stats.parquet"
