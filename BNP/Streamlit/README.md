@@ -94,8 +94,8 @@ cd BNP/Streamlit
 
 export HOBART_DB_PATH=/path/to/hobart_database.db
 # Optionnel
-export START_DATE=2024-01
-export END_DATE=2025-09
+# export START_DATE=2025-01
+# export END_DATE=2025-12
 
 python scripts/build_extracts.py
 ```

@@ -11,7 +11,7 @@ from src.metrics import format_hours, format_number, format_pct
 
 
 def inject_global_styles() -> None:
-    """Inject lightweight global styling for a cleaner executive layout."""
+    """Inject global CSS styles."""
     st.markdown(
         """
         <style>

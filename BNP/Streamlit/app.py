@@ -33,21 +33,53 @@ render_sidebar_filters()
 # ── Landing page ─────────────────────────────────────────────────────────────
 st.markdown("# Service Request Analytics")
 st.markdown(
+    "This dashboard monitors request volume, service performance, and category/desk dynamics "
+    "from pre-aggregated Parquet extracts."
+)
+
+st.markdown("### Start Here")
+step_col_1, step_col_2, step_col_3 = st.columns(3, gap="large")
+with step_col_1:
+    st.markdown(
+        """
+        **1) Set scope in the sidebar**
+        
+        Choose date range, category scope, and status.
+        """
+    )
+with step_col_2:
+    st.markdown(
+        """
+        **2) Open a page**
+        
+        Use the page menu to navigate to the analysis module you need.
+        """
+    )
+with step_col_3:
+    st.markdown(
+        """
+        **3) Export results**
+        
+        Each analysis page provides downloadable tables.
+        """
+    )
+
+st.markdown("### Analytics Modules")
+st.markdown(
     """
-    Executive dashboard for monitoring SR volume, closure performance, treatment delays,
-    and desk/category dynamics from pre-aggregated extracts.
-
-    Use the sidebar to navigate across the analytics modules:
-
-    | Page | Purpose |
-    |------|---------|
-    | **Executive Overview** | High-level KPIs, monthly trends, top categories |
-    | **Category Deep Dive** | Sortable table, Pareto analysis, category trends |
-    | **Desk Benchmark** | Clear desk benchmark: ranking, monthly trend, scorecard |
-    | **Analysis** | Processing time pain points, top category evolution |
-
-    *Data source: Parquet extracts generated offline from the Hobart SQLite database.*
+    | Page | What You Get |
+    |------|---------------|
+    | **Executive Overview** | Global KPIs, monthly trajectory, and category-level signals |
+    | **Category Deep Dive** | Category ranking table, Pareto distribution, and trend by category |
+    | **Desk Benchmark** | Desk ranking, monthly desk comparison, and scorecard export |
+    | **Analysis** | Processing-time analysis and evolution of top categories |
     """
+)
+
+st.markdown("### Data Pipeline")
+st.caption(
+    "Source data is extracted offline from the HOBART SQLite database, transformed into "
+    "Parquet datasets, and loaded in read-only mode by this Streamlit app."
 )
 st.divider()
 st.caption("Dashboard v1.1 - Data period and business scope are controlled from sidebar filters.")

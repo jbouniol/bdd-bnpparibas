@@ -25,7 +25,7 @@ render_sidebar_filters()
 inject_global_styles()
 
 # ── Header ───────────────────────────────────────────────────────────────────
-page_header("Category Deep Dive", "Analyse category volume, resolution times and SLA compliance")
+page_header("Category Deep Dive", "Analyze category volume, resolution time, and SLA compliance")
 
 # ── Data ─────────────────────────────────────────────────────────────────────
 cat_kpis = apply_category_filter(load_category_kpis())
@@ -46,19 +46,32 @@ render_dataframe_with_download(display_df, label="Download Category KPIs", key="
 st.divider()
 
 # ── Pareto ───────────────────────────────────────────────────────────────────
-col_left, col_right = st.columns([2.2, 1.8], gap="large")
+st.markdown("### Pareto Analysis")
+st.caption(
+    "Bars show request volume by category. The red line shows cumulative contribution "
+    "to total volume, with a configurable threshold."
+)
+control_col_1, control_col_2 = st.columns([1, 1], gap="large")
+with control_col_1:
+    pareto_top_n = st.slider("Top categories shown", 8, 40, 20, key="pareto_top_n")
+with control_col_2:
+    pareto_threshold = st.slider("Cumulative threshold (%)", 60, 95, 80, key="pareto_threshold")
 
-with col_left:
-    st.markdown("### Pareto Analysis")
-    st.plotly_chart(pareto_categories(cat_kpis), use_container_width=True)
+st.plotly_chart(
+    pareto_categories(cat_kpis, top_n=pareto_top_n, target_pct=float(pareto_threshold)),
+    use_container_width=True,
+)
+
+st.divider()
 
 # ── Category trend selector ──────────────────────────────────────────────────
-with col_right:
-    st.markdown("### Category Trend")
-    if not trends.empty and "category" in trends.columns:
-        categories = sorted(trends["category"].unique().tolist())
+st.markdown("### Category Trend")
+if not trends.empty and "category" in trends.columns:
+    categories = sorted(trends["category"].unique().tolist())
+    selector_col, _ = st.columns([1.8, 2.2], gap="large")
+    with selector_col:
         selected = st.selectbox("Select a category", categories, key="cat_trend_select")
-        if selected:
-            st.plotly_chart(line_category_trend(trends, selected), use_container_width=True)
-    else:
-        show_empty_state("No trend data available.")
+    if selected:
+        st.plotly_chart(line_category_trend(trends, selected), use_container_width=True)
+else:
+    show_empty_state("No trend data available.")

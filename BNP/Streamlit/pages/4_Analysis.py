@@ -29,7 +29,7 @@ inject_global_styles()
 # ── Header ───────────────────────────────────────────────────────────────────
 page_header(
     "Analysis",
-    "Processing time pain points & top category evolution",
+    "Processing time profile and top category evolution",
 )
 
 # ── Data ─────────────────────────────────────────────────────────────────────
@@ -43,7 +43,7 @@ trends_df = apply_date_filter(load_monthly_category_trends())
 st.markdown("### Average Processing Time by Category")
 st.caption(
     "Categories with > 100 closed SRs, ranked by longest average resolution time. "
-    "These are the client pain points requiring attention."
+    "This view highlights categories with the highest processing-time load."
 )
 
 if treatment_df.empty:

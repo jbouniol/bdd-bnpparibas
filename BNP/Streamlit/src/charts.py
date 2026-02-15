@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+import textwrap
+
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
@@ -110,12 +112,18 @@ def scatter_volume_vs_hours(df: pd.DataFrame, top_n: int = 20) -> go.Figure:
 
 # ── 4) Pareto chart (top 20 only) ───────────────────────────────────────────
 
-def pareto_categories(df: pd.DataFrame, top_n: int = 20) -> go.Figure:
-    """Pareto on top N categories only — avoids 1500-bar mess."""
-    sorted_df = (
-        df.nlargest(top_n, "total_sr")
-        .sort_values("total_sr", ascending=False)
-        .reset_index(drop=True)
+def pareto_categories(
+    df: pd.DataFrame,
+    top_n: int = 20,
+    target_pct: float = 80.0,
+) -> go.Figure:
+    """Pareto chart on top N categories."""
+    sorted_df = df.nlargest(top_n, "total_sr").sort_values("total_sr", ascending=False).reset_index(drop=True)
+    if sorted_df.empty:
+        return go.Figure()
+
+    sorted_df["category_label"] = sorted_df["category"].astype(str).map(
+        lambda value: "<br>".join(textwrap.wrap(value, width=22))
     )
     sorted_df["cumulative_pct"] = (
         sorted_df["total_sr"].cumsum() / df["total_sr"].sum() * 100
@@ -124,18 +132,18 @@ def pareto_categories(df: pd.DataFrame, top_n: int = 20) -> go.Figure:
     fig = go.Figure()
     fig.add_trace(
         go.Bar(
-            x=sorted_df["category"],
+            x=sorted_df["category_label"],
             y=sorted_df["total_sr"],
             name="Volume",
             marker_color=COLOR_PRIMARY,
             text=sorted_df["total_sr"].apply(lambda v: f"{v:,}"),
-            textposition="outside",
+            textposition="auto",
             hovertemplate="<b>%{x}</b><br>Volume: %{y:,}<extra></extra>",
         )
     )
     fig.add_trace(
         go.Scatter(
-            x=sorted_df["category"],
+            x=sorted_df["category_label"],
             y=sorted_df["cumulative_pct"],
             name="Cumulative %",
             yaxis="y2",
@@ -148,10 +156,19 @@ def pareto_categories(df: pd.DataFrame, top_n: int = 20) -> go.Figure:
     fig.update_layout(
         yaxis=dict(title="Volume"),
         yaxis2=dict(title="Cumulative %", overlaying="y", side="right", range=[0, 105]),
-        xaxis_tickangle=-45,
+        xaxis_tickangle=-20,
         legend=dict(orientation="h", y=1.12),
     )
-    return _apply_defaults(fig, title=f"Pareto – Top {top_n} Categories", height=550)
+    fig.add_hline(
+        y=target_pct,
+        yref="y2",
+        line_dash="dash",
+        line_color=COLOR_ACCENT,
+        annotation_text=f"{target_pct:.0f}% threshold",
+        annotation_position="top right",
+    )
+    fig.update_traces(cliponaxis=False)
+    return _apply_defaults(fig, title=f"Pareto – Top {top_n} Categories", height=560)
 
 
 # ── 5) Trend line for a single category ─────────────────────────────────────
@@ -189,7 +206,7 @@ def line_top_categories_monthly(
         y="total_sr",
         color="category",
         markers=True,
-        labels={"month": "Mois", "total_sr": "Nombre de Demandes", "category": "Catégorie"},
+        labels={"month": "Month", "total_sr": "Number of Requests", "category": "Category"},
         color_discrete_sequence=PALETTE_CATEGORICAL[:top_n],
     )
     fig.update_traces(line_width=2.5, marker_size=6)
@@ -207,7 +224,7 @@ def bar_treatment_time(df: pd.DataFrame, top_n: int = 15) -> go.Figure:
             y=top["category"],
             x=top["avg_days"],
             orientation="h",
-            text=top["avg_days"].apply(lambda x: f"{x:.1f}j"),
+            text=top["avg_days"].apply(lambda x: f"{x:.1f} d"),
             textposition="outside",
             marker=dict(color=top["avg_days"], colorscale="Reds"),
             hovertemplate="<b>%{y}</b><br>Avg: %{x:.1f} days<extra></extra>",

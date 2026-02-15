@@ -16,6 +16,7 @@ _KEY_DATE_END = "filter_date_end"
 _KEY_DESKS = "filter_desks"
 _KEY_CATEGORIES = "filter_categories"
 _KEY_STATUS = "filter_status"
+_DEFAULT_START_DATE = date(2025, 1, 1)
 
 
 def render_sidebar_filters() -> None:
@@ -24,7 +25,8 @@ def render_sidebar_filters() -> None:
 
     # Date range
     min_dt, max_dt = get_date_range()
-    start_default = st.session_state.get(_KEY_DATE_START, min_dt.date())
+    first_start_date = max(min_dt.date(), _DEFAULT_START_DATE)
+    start_default = st.session_state.get(_KEY_DATE_START, first_start_date)
     end_default = st.session_state.get(_KEY_DATE_END, max_dt.date())
 
     col1, col2 = st.sidebar.columns(2)
@@ -47,10 +49,10 @@ def render_sidebar_filters() -> None:
     st.session_state[_KEY_DATE_START] = start_date
     st.session_state[_KEY_DATE_END] = end_date
 
-    # Desk filter intentionally removed for simpler navigation.
+    # Desk filter is disabled.
     st.session_state[_KEY_DESKS] = []
 
-    # Category filter with compact modes (all / top N / search)
+    # Category filter modes.
     st.sidebar.subheader("Category Scope")
     mode = st.sidebar.radio(
         "Selection mode",
@@ -129,7 +131,7 @@ def render_sidebar_filters() -> None:
 
 def get_date_filter() -> tuple[date, date]:
     return (
-        st.session_state.get(_KEY_DATE_START, date(2024, 1, 1)),
+        st.session_state.get(_KEY_DATE_START, _DEFAULT_START_DATE),
         st.session_state.get(_KEY_DATE_END, date(2025, 9, 30)),
     )
 

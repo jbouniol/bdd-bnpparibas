@@ -5,8 +5,8 @@ Usage:
     HOBART_DB_PATH=/path/to/hobart_database.db python scripts/build_extracts.py
 
 Optional env vars:
-    START_DATE  – first month (default: 2024-01)
-    END_DATE    – last month  (default: 2025-09)
+    START_DATE  – first month (format: YYYY-MM, optional)
+    END_DATE    – last month  (format: YYYY-MM, optional)
 """
 
 from __future__ import annotations
@@ -27,8 +27,8 @@ logging.basicConfig(
 log = logging.getLogger("build_extracts")
 
 DB_PATH = os.environ.get("HOBART_DB_PATH", "hobart_database.db")
-START_DATE = os.environ.get("START_DATE", "2024-01")
-END_DATE = os.environ.get("END_DATE", "2025-09")
+START_DATE = os.environ.get("START_DATE")
+END_DATE = os.environ.get("END_DATE")
 OUTPUT_DIR = Path(__file__).resolve().parent.parent / "data"
 
 
@@ -36,6 +36,23 @@ OUTPUT_DIR = Path(__file__).resolve().parent.parent / "data"
 
 def _load_raw(conn: sqlite3.Connection) -> pd.DataFrame:
     """Load SR data with category names, computing SLA from EXPIRATION_DATE."""
+    where_clause = ""
+    params: list[str] = []
+    if START_DATE and END_DATE:
+        where_clause = "WHERE strftime('%Y-%m', sr.CREATIONDATE) BETWEEN ? AND ?"
+        params = [START_DATE, END_DATE]
+        log.info("Executing query with date range: %s -> %s", START_DATE, END_DATE)
+    elif START_DATE:
+        where_clause = "WHERE strftime('%Y-%m', sr.CREATIONDATE) >= ?"
+        params = [START_DATE]
+        log.info("Executing query with lower bound: %s", START_DATE)
+    elif END_DATE:
+        where_clause = "WHERE strftime('%Y-%m', sr.CREATIONDATE) <= ?"
+        params = [END_DATE]
+        log.info("Executing query with upper bound: %s", END_DATE)
+    else:
+        log.info("Executing query with no date filter (full available history).")
+
     sql = f"""
         SELECT
             sr.ID                AS sr_id,
@@ -49,10 +66,9 @@ def _load_raw(conn: sqlite3.Connection) -> pd.DataFrame:
             sr.ACKNOWLEDGE_DATE  AS first_response_at
         FROM sr
         LEFT JOIN category c ON sr.CATEGORY_ID = c.ID
-        WHERE strftime('%Y-%m', sr.CREATIONDATE) BETWEEN '{START_DATE}' AND '{END_DATE}'
+        {where_clause}
     """
-    log.info("Executing query (dates %s → %s)…", START_DATE, END_DATE)
-    df = pd.read_sql(sql, conn)
+    df = pd.read_sql(sql, conn, params=params)
     log.info("Loaded %s rows", f"{len(df):,}")
     return df
 
