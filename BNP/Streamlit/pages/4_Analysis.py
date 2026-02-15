@@ -1,4 +1,4 @@
-"""Page 5 – Jo Analysis: treatment time by category + top 5 monthly evolution."""
+"""Page 4 – Analysis: treatment time by category + top category monthly evolution."""
 
 from __future__ import annotations
 
@@ -12,13 +12,19 @@ from src.data_loader import (
     load_treatment_time,
 )
 from src.filters import apply_date_filter, render_sidebar_filters
-from src.ui import page_header, render_dataframe_with_download, show_empty_state
+from src.ui import (
+    inject_global_styles,
+    page_header,
+    render_dataframe_with_download,
+    show_empty_state,
+)
 
 # ── Page config ──────────────────────────────────────────────────────────────
 st.set_page_config(
-    page_title=f"{PAGE_TITLE} – Jo Analysis", page_icon=PAGE_ICON, layout="wide",
+    page_title=f"{PAGE_TITLE} – Analysis", page_icon=PAGE_ICON, layout="wide",
 )
 render_sidebar_filters()
+inject_global_styles()
 
 # ── Header ───────────────────────────────────────────────────────────────────
 page_header(
@@ -69,7 +75,9 @@ st.caption(
 if trends_df.empty or category_kpis.empty:
     show_empty_state("Trend or category data not available.")
 else:
-    top_n = st.slider("Number of top categories", 3, 10, 5, key="top_n_slider")
+    slider_col, _ = st.columns([1.7, 2.3], gap="large")
+    with slider_col:
+        top_n = st.slider("Number of top categories", 3, 10, 5, key="top_n_slider")
     st.plotly_chart(
         line_top_categories_monthly(trends_df, category_kpis, top_n=top_n),
         use_container_width=True,

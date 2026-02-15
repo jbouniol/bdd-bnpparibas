@@ -7,13 +7,14 @@ import streamlit as st
 from src.charts import bar_top_categories, line_monthly_sr, scatter_volume_vs_hours
 from src.config import PAGE_ICON, PAGE_TITLE
 from src.data_loader import load_category_kpis, load_global_stats
-from src.filters import apply_all_filters, apply_date_filter, render_sidebar_filters
+from src.filters import apply_date_filter, render_sidebar_filters
 from src.metrics import compute_header_kpis
-from src.ui import page_header, render_kpi_row, show_empty_state
+from src.ui import inject_global_styles, page_header, render_kpi_row, show_empty_state
 
 # ── Page config ──────────────────────────────────────────────────────────────
 st.set_page_config(page_title=f"{PAGE_TITLE} – Overview", page_icon=PAGE_ICON, layout="wide")
 render_sidebar_filters()
+inject_global_styles()
 
 # ── Header ───────────────────────────────────────────────────────────────────
 page_header("Executive Overview", "High-level diagnostics across all service requests")
@@ -33,7 +34,7 @@ render_kpi_row(kpis)
 st.markdown("")  # spacer
 
 # ── Charts ───────────────────────────────────────────────────────────────────
-col_left, col_right = st.columns([3, 2])
+col_left, col_right = st.columns([2.5, 1.5], gap="large")
 
 with col_left:
     st.plotly_chart(line_monthly_sr(global_stats), use_container_width=True)

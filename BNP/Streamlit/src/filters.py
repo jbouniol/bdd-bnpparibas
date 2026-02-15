@@ -7,7 +7,7 @@ from datetime import date
 import pandas as pd
 import streamlit as st
 
-from src.data_loader import get_date_range, get_distinct_categories, get_distinct_desks
+from src.data_loader import get_date_range, load_category_kpis
 
 
 # ── Session-state keys ───────────────────────────────────────────────────────
@@ -47,21 +47,75 @@ def render_sidebar_filters() -> None:
     st.session_state[_KEY_DATE_START] = start_date
     st.session_state[_KEY_DATE_END] = end_date
 
-    # Desk multiselect
-    desks = get_distinct_desks()
-    default_desks = st.session_state.get(_KEY_DESKS, desks)
-    selected_desks = st.sidebar.multiselect(
-        "Desk", options=desks, default=default_desks, key="__sb_desks"
-    )
-    st.session_state[_KEY_DESKS] = selected_desks
+    # Desk filter intentionally removed for simpler navigation.
+    st.session_state[_KEY_DESKS] = []
 
-    # Category multiselect
-    categories = get_distinct_categories()
-    default_cats = st.session_state.get(_KEY_CATEGORIES, categories)
-    selected_cats = st.sidebar.multiselect(
-        "Category", options=categories, default=default_cats, key="__sb_cats"
+    # Category filter with compact modes (all / top N / search)
+    st.sidebar.subheader("Category Scope")
+    mode = st.sidebar.radio(
+        "Selection mode",
+        options=["All categories", "Top by volume", "Search and select"],
+        key="__sb_category_mode",
     )
-    st.session_state[_KEY_CATEGORIES] = selected_cats
+
+    category_kpis = load_category_kpis()
+    if {"category", "total_sr"}.issubset(category_kpis.columns):
+        categories = (
+            category_kpis.sort_values("total_sr", ascending=False)["category"]
+            .dropna()
+            .astype(str)
+            .drop_duplicates()
+            .tolist()
+        )
+    elif "category" in category_kpis.columns:
+        categories = sorted(category_kpis["category"].dropna().astype(str).unique().tolist())
+    else:
+        categories = []
+
+    if mode == "All categories":
+        st.session_state[_KEY_CATEGORIES] = []
+        st.sidebar.caption("All categories are included.")
+    elif mode == "Top by volume":
+        if not categories:
+            st.session_state[_KEY_CATEGORIES] = []
+            st.sidebar.caption("No category list available.")
+        else:
+            max_top = min(100, len(categories))
+            min_top = 1 if max_top < 5 else 5
+            default_top = min(20, max_top)
+            step = 1 if max_top < 10 else 5
+            top_n = st.sidebar.slider(
+                "Top categories (N)",
+                min_value=min_top,
+                max_value=max_top,
+                value=default_top,
+                step=step,
+                key="__sb_cat_top_n",
+            )
+            st.session_state[_KEY_CATEGORIES] = categories[:top_n]
+            st.sidebar.caption(f"{top_n} categories selected.")
+    else:
+        search_term = st.sidebar.text_input(
+            "Search keyword",
+            value=st.session_state.get("__sb_cat_search", ""),
+            placeholder="Type part of a category name",
+            key="__sb_cat_search",
+        ).strip().lower()
+        if search_term:
+            filtered_options = [cat for cat in categories if search_term in cat.lower()]
+        else:
+            filtered_options = categories[:200]
+
+        previous = st.session_state.get(_KEY_CATEGORIES, [])
+        default_custom = [cat for cat in previous if cat in filtered_options]
+        selected_cats = st.sidebar.multiselect(
+            "Categories",
+            options=filtered_options,
+            default=default_custom,
+            key="__sb_cats_custom",
+        )
+        st.session_state[_KEY_CATEGORIES] = selected_cats
+        st.sidebar.caption(f"{len(filtered_options):,} matching options.")
 
     # Status
     default_status = st.session_state.get(_KEY_STATUS, "All")

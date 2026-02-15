@@ -12,12 +12,17 @@ from src.filters import (
     apply_date_filter,
     render_sidebar_filters,
 )
-from src.metrics import format_hours, format_pct
-from src.ui import page_header, render_dataframe_with_download, show_empty_state
+from src.ui import (
+    inject_global_styles,
+    page_header,
+    render_dataframe_with_download,
+    show_empty_state,
+)
 
 # ── Page config ──────────────────────────────────────────────────────────────
 st.set_page_config(page_title=f"{PAGE_TITLE} – Categories", page_icon=PAGE_ICON, layout="wide")
 render_sidebar_filters()
+inject_global_styles()
 
 # ── Header ───────────────────────────────────────────────────────────────────
 page_header("Category Deep Dive", "Analyse category volume, resolution times and SLA compliance")
@@ -41,7 +46,7 @@ render_dataframe_with_download(display_df, label="Download Category KPIs", key="
 st.divider()
 
 # ── Pareto ───────────────────────────────────────────────────────────────────
-col_left, col_right = st.columns([3, 2])
+col_left, col_right = st.columns([2.2, 1.8], gap="large")
 
 with col_left:
     st.markdown("### Pareto Analysis")
