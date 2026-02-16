@@ -48,14 +48,19 @@ st.divider()
 # ── Pareto ───────────────────────────────────────────────────────────────────
 st.markdown("### Pareto Analysis")
 st.caption(
-    "Bars show request volume by category. The red line shows cumulative contribution "
-    "to total volume, with a configurable threshold."
+    "Bars show request volume by category. The red line shows cumulative share within "
+    "the categories currently displayed."
 )
 control_col_1, control_col_2 = st.columns([1, 1], gap="large")
 with control_col_1:
-    pareto_top_n = st.slider("Top categories shown", 8, 40, 20, key="pareto_top_n")
+    pareto_top_n = st.slider("Categories shown", 8, 40, 15, key="pareto_top_n")
 with control_col_2:
     pareto_threshold = st.slider("Cumulative threshold (%)", 60, 95, 80, key="pareto_threshold")
+
+shown_volume = cat_kpis.nlargest(pareto_top_n, "total_sr")["total_sr"].sum()
+total_volume = cat_kpis["total_sr"].sum()
+coverage = (shown_volume / total_volume * 100.0) if total_volume else 0.0
+st.caption(f"Displayed categories represent {coverage:.1f}% of total ticket volume.")
 
 st.plotly_chart(
     pareto_categories(cat_kpis, top_n=pareto_top_n, target_pct=float(pareto_threshold)),

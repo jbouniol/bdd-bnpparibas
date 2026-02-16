@@ -137,9 +137,8 @@ def pareto_categories(
     sorted_df["category_label"] = sorted_df["category"].astype(str).map(
         lambda value: "<br>".join(textwrap.wrap(value, width=22))
     )
-    sorted_df["cumulative_pct"] = (
-        sorted_df["total_sr"].cumsum() / df["total_sr"].sum() * 100
-    )
+    shown_total = sorted_df["total_sr"].sum()
+    sorted_df["cumulative_pct"] = sorted_df["total_sr"].cumsum() / shown_total * 100.0
 
     fig = go.Figure()
     fig.add_trace(
@@ -167,9 +166,15 @@ def pareto_categories(
     )
     fig.update_layout(
         yaxis=dict(title="Volume"),
-        yaxis2=dict(title="Cumulative %", overlaying="y", side="right", range=[0, 105]),
+        yaxis2=dict(
+            title="Cumulative share of shown categories (%)",
+            overlaying="y",
+            side="right",
+            range=[0, 105],
+        ),
         xaxis_tickangle=-20,
-        legend=dict(orientation="h", y=1.12),
+        legend=dict(orientation="h", x=0.0, y=1.04),
+        margin=dict(l=40, r=30, t=80, b=70),
     )
     fig.add_hline(
         y=target_pct,
