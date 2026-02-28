@@ -7,6 +7,7 @@ Analytics platform built for the BNP Paribas consulting case, with two complemen
 
 ## Contributors
 
+- Jonathan Bouniol
 - Sacha Nardoux
 - Anna Spira
 - Keira Chang
